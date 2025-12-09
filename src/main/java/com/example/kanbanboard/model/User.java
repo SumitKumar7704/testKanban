@@ -8,11 +8,17 @@ public class User {
     @Id private String id;
     private String name;
     private String email;
+
     private String role;
     private int wipLimit = 3;
 
-    public User() {}
+    public User() {
+
+    }
+
+
     public User(String name, String email, String role, int wipLimit) {
+
         this.name = name;
         this.email = email;
         this.role = role;

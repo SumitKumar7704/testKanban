@@ -4,10 +4,10 @@ import com.example.kanbanboard.model.User;
 import com.example.kanbanboard.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 
+@RestController
 @RequestMapping("/test")
 public class TestController {
 
@@ -16,7 +16,7 @@ public class TestController {
 
     @PostMapping("/user")
     public User createTestUser() {
-        User testUser = new User("Sumit", "sumit@gmail.com", "member", 3);
+        User testUser = new User("sumit ", "sumit@gmail.com", "member", 3);
         return userRepository.save(testUser);
     }
 
@@ -24,5 +24,4 @@ public class TestController {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
-
 }

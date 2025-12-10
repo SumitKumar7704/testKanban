@@ -1,28 +1,26 @@
 package com.example.kanbanboard.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
 
 @Document(collection = "users")
 public class User {
-    @Id private String id;
-    private String name;
-    private String email;
 
-    private String role;
-    private int wipLimit = 3;
+    @Id
+    private String id;
+
+    @Indexed(unique = true)
+    private String username;
+
+    private String email;
+    private String password;
+
+    private List<String> boardIds;
 
     public User() {
-
-    }
-
-
-    public User(String name, String email, String role, int wipLimit) {
-
-        this.name = name;
-        this.email = email;
-        this.role = role;
-        this.wipLimit = wipLimit;
     }
 
     public String getId() {
@@ -33,20 +31,12 @@ public class User {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
@@ -57,11 +47,19 @@ public class User {
         this.email = email;
     }
 
-    public int getWipLimit() {
-        return wipLimit;
+    public String getPassword() {
+        return password;
     }
 
-    public void setWipLimit(int wipLimit) {
-        this.wipLimit = wipLimit;
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public List<String> getBoardIds() {
+        return boardIds;
+    }
+
+    public void setBoardIds(List<String> boardIds) {
+        this.boardIds = boardIds;
     }
 }

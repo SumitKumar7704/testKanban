@@ -1,13 +1,13 @@
 
 package com.example.kanbanboard.repository;
 
-import com.example.kanbanboard.model.Task;
+import com.example.kanbanboard.model.Board;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface TaskRepository extends MongoRepository<Task, String> {
-    List<Task> findByColumnId(String columnId);
+public interface BoardRepository extends MongoRepository<Board, String> {
+    List<Board> findByOwnerId(String ownerId);
 }

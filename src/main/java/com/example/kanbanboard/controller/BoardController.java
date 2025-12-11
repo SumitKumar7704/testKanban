@@ -15,13 +15,15 @@ public class BoardController {
     @Autowired
     private BoardService boardService;
 
+    // Create board for a given user
     @PostMapping
-    public Board create(@RequestBody Board board) {
-        return boardService.create(board);
+    public Board createBoard(@RequestParam String userId, @RequestBody Board board) {
+        return boardService.create(userId, board);
     }
 
+    // Get all boards for a given user
     @GetMapping("/user/{userId}")
-    public List<Board> getBoards(@PathVariable String userId) {
+    public List<Board> getUserBoards(@PathVariable String userId) {
         return boardService.getUserBoards(userId);
     }
 }

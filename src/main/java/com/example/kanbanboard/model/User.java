@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "users")
@@ -18,10 +19,13 @@ public class User {
     private String email;
     private String password;
 
-    private List<String> boardIds;
+
+    private List<Board> boards = new ArrayList<>();
 
     public User() {
     }
+
+    // getters and setters
 
     public String getId() {
         return id;
@@ -55,11 +59,11 @@ public class User {
         this.password = password;
     }
 
-    public List<String> getBoardIds() {
-        return boardIds;
+    public List<Board> getBoards() {
+        return boards;
     }
 
-    public void setBoardIds(List<String> boardIds) {
-        this.boardIds = boardIds;
+    public void setBoards(List<Board> boards) {
+        this.boards = boards;
     }
 }

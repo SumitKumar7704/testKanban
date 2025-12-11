@@ -1,4 +1,3 @@
-
 package com.example.kanbanboard.controller;
 
 import com.example.kanbanboard.model.Column;
@@ -16,13 +15,22 @@ public class ColumnController {
     @Autowired
     private ColumnService columnService;
 
+    // Create a column in a board for a user
     @PostMapping
-    public Column create(@RequestBody Column column) {
-        return columnService.create(column);
+    public Column createColumn(
+            @RequestParam String userId,
+            @RequestParam String boardId,
+            @RequestBody Column column
+    ) {
+        return columnService.create(userId, boardId, column);
     }
 
-    @GetMapping("/board/{boardId}")
-    public List<Column> getColumns(@PathVariable String boardId) {
-        return columnService.getBoardColumns(boardId);
+    // Get all columns for a board of a user
+    @GetMapping
+    public List<Column> getBoardColumns(
+            @RequestParam String userId,
+            @RequestParam String boardId
+    ) {
+        return columnService.getBoardColumns(userId, boardId);
     }
 }

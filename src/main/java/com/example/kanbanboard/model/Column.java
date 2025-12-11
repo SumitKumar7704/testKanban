@@ -1,22 +1,20 @@
 package com.example.kanbanboard.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "columns")
 public class Column {
 
-    @Id
     private String id;
-
     private String name;
-    private String boardId;
-    private List<String> taskIds;
+
+
+    private List<Task> tasks = new ArrayList<>();
 
     public Column() {
     }
+
+    // getters and setters
 
     public String getId() {
         return id;
@@ -34,19 +32,11 @@ public class Column {
         this.name = name;
     }
 
-    public String getBoardId() {
-        return boardId;
+    public List<Task> getTasks() {
+        return tasks;
     }
 
-    public void setBoardId(String boardId) {
-        this.boardId = boardId;
-    }
-
-    public List<String> getTaskIds() {
-        return taskIds;
-    }
-
-    public void setTaskIds(List<String> taskIds) {
-        this.taskIds = taskIds;
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
     }
 }

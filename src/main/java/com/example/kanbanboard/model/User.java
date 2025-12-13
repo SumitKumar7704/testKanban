@@ -19,6 +19,9 @@ public class User {
     private String email;
     private String password;
 
+    private Boolean admin; // instead of boolean
+
+
 
     private List<Board> boards = new ArrayList<>();
 
@@ -27,6 +30,19 @@ public class User {
 
     // getters and setters
 
+    //Admin
+
+
+    public Boolean getAdmin() {
+        return admin != null ? admin : false;
+    }
+
+
+    public void setAdmin(Boolean admin) {
+        this.admin = admin;
+    }
+
+    // rest of the variables G  &  S
     public String getId() {
         return id;
     }

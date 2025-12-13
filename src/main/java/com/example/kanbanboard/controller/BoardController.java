@@ -21,6 +21,7 @@ public class BoardController {
         return boardService.create(userId, board);
     }
 
+
     // Get all boards for a given user
     @GetMapping("/user/{userId}")
     public List<Board> getUserBoards(@PathVariable String userId) {

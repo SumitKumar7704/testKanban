@@ -14,18 +14,21 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
-    // Create a task inside a column of a board for a user
+    // Admin (creatorId) creates a task for a target user in a board.
+    // Task always starts in TODO column logically.
     @PostMapping
     public Task createTask(
-            @RequestParam String userId,
+            @RequestParam String creatorId,   // logged-in admin
+            @RequestParam String userId,      // target user to assign to
             @RequestParam String boardId,
-            @RequestParam String columnId,
             @RequestBody Task task
     ) {
-        return taskService.createTask(userId, boardId, columnId, task);
+        // ignore any status sent from frontend, enforce TODO via service
+        task.setStatus(null);
+        return taskService.createTask(creatorId, userId, boardId, task);
     }
 
-    // Update a task by id (search nested inside user)
+    // Update a task by id (status, title, description, deadline)
     @PatchMapping("/{taskId}")
     public ResponseEntity<Task> updateTask(
             @PathVariable String taskId,

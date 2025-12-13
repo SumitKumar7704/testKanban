@@ -7,13 +7,28 @@ public class Task {
     private String id;
     private String title;
     private String description;
-    private TaskStatus status;
+    private TaskStatus status = TaskStatus.TODO; // default leftmost column
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // when admin assigned the task
+    private LocalDateTime assignedAt = LocalDateTime.now();
+
+    // deadline chosen by admin
+    private LocalDateTime deadline;
+
+    // still stored if you want to keep physical column mapping
+    private String columnId;
 
     public Task() {
     }
 
-    // getters and setters
+    public String getColumnId() {
+        return columnId;
+    }
+
+    public void setColumnId(String columnId) {
+        this.columnId = columnId;
+    }
 
     public String getId() {
         return id;
@@ -55,7 +70,19 @@ public class Task {
         this.createdAt = createdAt;
     }
 
-    public enum TaskStatus {
-        TODO, INPROGRESS, DONE
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+
+    public LocalDateTime getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(LocalDateTime deadline) {
+        this.deadline = deadline;
     }
 }

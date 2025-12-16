@@ -1,8 +1,10 @@
 package com.example.kanbanboard.service;
+
 import com.example.kanbanboard.exception.WipLimitExceededException;
 import com.example.kanbanboard.model.Board;
 import com.example.kanbanboard.model.Column;
 import com.example.kanbanboard.model.Task;
+import com.example.kanbanboard.model.TaskPriority;
 import com.example.kanbanboard.model.TaskStatus;
 import com.example.kanbanboard.model.User;
 import com.example.kanbanboard.repository.UserRepository;
@@ -63,12 +65,21 @@ public class TaskService {
             newTask.setAssignedAt(LocalDateTime.now());
         }
 
+        // ensure description is present (admin must provide it)
+        if (newTask.getDescription() == null || newTask.getDescription().isBlank()) {
+            throw new RuntimeException("Task description is required");
+        }
+
+        // ensure priority has a default if admin did not send one
+        if (newTask.getPriority() == null) {
+            newTask.setPriority(TaskPriority.MEDIUM);
+        }
+
         newTask.setColumnId(todoColumn.getId());
 
         // 6) Add task and save target user
         todoColumn.getTasks().add(newTask);
         userRepo.save(user);
-
         return newTask;
     }
 
@@ -90,6 +101,7 @@ public class TaskService {
 
                             if (newStatus == TaskStatus.IN_PROGRESS) {
                                 long inProgressCount = countInProgressTasks(user);
+
                                 if (task.getStatus() != TaskStatus.IN_PROGRESS &&
                                         inProgressCount >= 3) {
                                     throw new WipLimitExceededException(
@@ -111,11 +123,19 @@ public class TaskService {
                         if (newData.getTitle() != null) {
                             task.setTitle(newData.getTitle());
                         }
+
                         if (newData.getDescription() != null) {
+                            // If you want only admin to change description, remove this assignment.
                             task.setDescription(newData.getDescription());
                         }
+
                         if (newData.getDeadline() != null) {
                             task.setDeadline(newData.getDeadline());
+                        }
+
+                        // allow priority change (user or admin can send it)
+                        if (newData.getPriority() != null) {
+                            task.setPriority(newData.getPriority());
                         }
 
                         userRepo.save(user);
@@ -140,6 +160,7 @@ public class TaskService {
     // helper: find a column that corresponds to a status
     private Column findColumnForStatus(Board board, TaskStatus status) {
         String expectedName;
+
         switch (status) {
             case TODO:
                 expectedName = "TODO";

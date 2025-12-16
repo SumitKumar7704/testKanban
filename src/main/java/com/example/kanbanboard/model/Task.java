@@ -5,9 +5,13 @@ import java.time.LocalDateTime;
 public class Task {
 
     private String id;
+
     private String title;
+
     private String description;
+
     private TaskStatus status = TaskStatus.TODO; // default leftmost column
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // when admin assigned the task
@@ -15,6 +19,9 @@ public class Task {
 
     // deadline chosen by admin
     private LocalDateTime deadline;
+
+    // task priority (admin sets first, user can change later)
+    private TaskPriority priority = TaskPriority.MEDIUM;
 
     // still stored if you want to keep physical column mapping
     private String columnId;
@@ -84,5 +91,13 @@ public class Task {
 
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
+    }
+
+    public TaskPriority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(TaskPriority priority) {
+        this.priority = priority;
     }
 }

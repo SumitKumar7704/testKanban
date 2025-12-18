@@ -10,7 +10,8 @@ public class Task {
 
     private String description;
 
-    private TaskStatus status = TaskStatus.TODO; // default leftmost column
+    // default logical status
+    private TaskStatus status = TaskStatus.TODO;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -21,6 +22,7 @@ public class Task {
     private LocalDateTime deadline;
 
     // task priority (admin sets first, user can change later)
+    // keep default MEDIUM for UI convenience
     private TaskPriority priority = TaskPriority.MEDIUM;
 
     // still stored if you want to keep physical column mapping

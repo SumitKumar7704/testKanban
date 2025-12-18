@@ -18,8 +18,8 @@ public class TaskController {
     // Task always starts in TODO column logically.
     @PostMapping
     public Task createTask(
-            @RequestParam String creatorId,   // logged-in admin
-            @RequestParam String userId,      // target user to assign to
+            @RequestParam String creatorId, // logged-in admin
+            @RequestParam String userId,    // target user to assign to
             @RequestParam String boardId,
             @RequestBody Task task
     ) {
@@ -28,7 +28,7 @@ public class TaskController {
         return taskService.createTask(creatorId, userId, boardId, task);
     }
 
-    // Update a task by id (status, title, description, deadline)
+    // Update a task by id (status, title, description, deadline, priority)
     @PatchMapping("/{taskId}")
     public ResponseEntity<Task> updateTask(
             @PathVariable String taskId,

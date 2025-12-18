@@ -57,7 +57,8 @@ public class TaskService {
 
         // 5) Generate task id and status = TODO by default
         newTask.setId(UUID.randomUUID().toString());
-        // force TODO for new tasks
+
+        // force TODO for new tasks regardless of what frontend sends
         newTask.setStatus(TaskStatus.TODO);
 
         // ensure assignedAt is set when admin creates it
@@ -70,9 +71,9 @@ public class TaskService {
             throw new RuntimeException("Task description is required");
         }
 
-        // default priority to LOW only if admin did not choose one
+        // default priority ONLY if admin did not choose one
         if (newTask.getPriority() == null) {
-            newTask.setPriority(TaskPriority.LOW);
+            newTask.setPriority(TaskPriority.MEDIUM);
         }
 
         newTask.setColumnId(todoColumn.getId());
@@ -80,6 +81,7 @@ public class TaskService {
         // 6) Add task and save target user
         todoColumn.getTasks().add(newTask);
         userRepo.save(user);
+
         return newTask;
     }
 
@@ -93,7 +95,7 @@ public class TaskService {
                 for (Task task : column.getTasks()) {
                     if (task.getId().equals(taskId)) {
 
-                        // handle status change with WIP check
+                        // 1) Status: only if explicitly provided and changed
                         if (newData.getStatus() != null &&
                                 newData.getStatus() != task.getStatus()) {
 
@@ -101,7 +103,6 @@ public class TaskService {
 
                             if (newStatus == TaskStatus.IN_PROGRESS) {
                                 long inProgressCount = countInProgressTasks(user);
-
                                 if (task.getStatus() != TaskStatus.IN_PROGRESS &&
                                         inProgressCount >= 3) {
                                     throw new WipLimitExceededException(
@@ -120,20 +121,22 @@ public class TaskService {
                             }
                         }
 
+                        // 2) Title: only if explicitly provided
                         if (newData.getTitle() != null) {
                             task.setTitle(newData.getTitle());
                         }
 
+                        // 3) Description: only if explicitly provided
                         if (newData.getDescription() != null) {
-                            // If you want only admin to change description, remove this assignment.
                             task.setDescription(newData.getDescription());
                         }
 
+                        // 4) Deadline: only if explicitly provided
                         if (newData.getDeadline() != null) {
                             task.setDeadline(newData.getDeadline());
                         }
 
-                        // allow priority change (user or admin can send it)
+                        // 5) Priority: only if explicitly provided
                         if (newData.getPriority() != null) {
                             task.setPriority(newData.getPriority());
                         }

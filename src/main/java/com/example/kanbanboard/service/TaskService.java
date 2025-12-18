@@ -70,9 +70,9 @@ public class TaskService {
             throw new RuntimeException("Task description is required");
         }
 
-        // ensure priority has a default if admin did not send one
+        // default priority to LOW only if admin did not choose one
         if (newTask.getPriority() == null) {
-            newTask.setPriority(TaskPriority.MEDIUM);
+            newTask.setPriority(TaskPriority.LOW);
         }
 
         newTask.setColumnId(todoColumn.getId());

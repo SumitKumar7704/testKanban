@@ -305,6 +305,40 @@ public class TaskService {
         throw new RuntimeException("Task not found");
     }
 
+    // ===================== ADMIN DELETE TASK =====================
+
+    public void deleteTask(String adminId, String userId, String taskId) {
+
+        User admin = userRepo.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        if (!admin.getAdmin()) {
+            throw new RuntimeException("Only admin can delete tasks");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean removed = false;
+
+        for (Board board : user.getBoards()) {
+            for (Column column : board.getColumns()) {
+                // removeIf returns true if any element was removed
+                boolean colRemoved = column.getTasks().removeIf(t -> t.getId().equals(taskId));
+                if (colRemoved) {
+                    removed = true;
+                    break;
+                }
+            }
+            if (removed) break;
+        }
+
+        if (!removed) {
+            throw new RuntimeException("Task not found");
+        }
+
+        userRepo.save(user);
+    }
+
     // ===================== HELPERS =====================
 
     private long countInProgressTasks(User user) {

@@ -64,6 +64,8 @@ public class UserService {
         // Boolean to string
         result.put("isAdmin", user.getAdmin().toString());
         result.put("username", user.getUsername());
+
+        result.put("profilePictureUrl", user.getProfilePictureUrl());
         return result;
     }
 

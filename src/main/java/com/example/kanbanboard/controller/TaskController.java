@@ -53,7 +53,7 @@ public class TaskController {
         return ResponseEntity.ok(reviewed);
     }
 
-    // NEW: Admin override to move an already approved DONE task back to TODO
+    // Admin override to move an already approved DONE task back to TODO
     // and optionally mark it as "reopened" + set a remark visible to both.
     @PatchMapping("/{taskId}/override-status")
     public ResponseEntity<Task> overrideTaskStatus(
@@ -64,5 +64,16 @@ public class TaskController {
     ) {
         Task updated = taskService.overrideTaskStatus(adminId, userId, taskId, data);
         return ResponseEntity.ok(updated);
+    }
+
+    // NEW: Admin delete task
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> deleteTask(
+            @PathVariable String taskId,
+            @RequestParam String userId,   // board owner (whose boards/columns contain the task)
+            @RequestParam String adminId   // logged-in admin performing delete
+    ) {
+        taskService.deleteTask(adminId, userId, taskId);
+        return ResponseEntity.noContent().build();
     }
 }

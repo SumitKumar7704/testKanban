@@ -12,39 +12,36 @@ public class User {
 
     @Id
     private String id;
-   // private String name;
 
-   @Indexed(unique = true)
+    // NEW: full display name
+    private String name;
 
+    @Indexed(unique = true)
     private String username;
 
     private String email;
     private String password;
 
-    private Boolean admin; // instead of boolean
+    private Boolean admin;
 
-
+    // NEW: profile picture URL (preset avatar or uploaded image)
+    private String profilePictureUrl;
 
     private List<Board> boards = new ArrayList<>();
 
     public User() {
     }
 
-    // getters and setters
-
-    //Admin
-
-
+    // Admin
     public Boolean getAdmin() {
         return admin != null ? admin : false;
     }
-
 
     public void setAdmin(Boolean admin) {
         this.admin = admin;
     }
 
-    // rest of the variables G  &  S
+    // Id
     public String getId() {
         return id;
     }
@@ -53,6 +50,16 @@ public class User {
         this.id = id;
     }
 
+    // Name
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    // Username
     public String getUsername() {
         return username;
     }
@@ -61,6 +68,7 @@ public class User {
         this.username = username;
     }
 
+    // Email
     public String getEmail() {
         return email;
     }
@@ -69,6 +77,7 @@ public class User {
         this.email = email;
     }
 
+    // Password
     public String getPassword() {
         return password;
     }
@@ -77,6 +86,16 @@ public class User {
         this.password = password;
     }
 
+    // Profile picture
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    // Boards
     public List<Board> getBoards() {
         return boards;
     }

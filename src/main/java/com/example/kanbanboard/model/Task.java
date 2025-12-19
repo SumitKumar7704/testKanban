@@ -5,30 +5,30 @@ import java.time.LocalDateTime;
 public class Task {
 
     private String id;
-
     private String title;
-
     private String description;
 
-    // default logical status
-    private TaskStatus status = TaskStatus.TODO;
+    // ❌ NO DEFAULTS HERE
+    private TaskStatus status;
+    private TaskPriority priority;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    // when admin assigned the task
-    private LocalDateTime assignedAt = LocalDateTime.now();
-
-    // deadline chosen by admin
+    private LocalDateTime createdAt;
+    private LocalDateTime assignedAt;
     private LocalDateTime deadline;
 
-    // task priority (admin sets first, user can change later)
-    // keep default MEDIUM for UI convenience
-    private TaskPriority priority = TaskPriority.MEDIUM;
-
-    // still stored if you want to keep physical column mapping
     private String columnId;
 
-    public Task() {
+    // ✅ EMPTY constructor ONLY
+    public Task() {}
+
+    // ---------------- getters & setters ----------------
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getColumnId() {
@@ -37,14 +37,6 @@ public class Task {
 
     public void setColumnId(String columnId) {
         this.columnId = columnId;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getTitle() {
@@ -71,6 +63,14 @@ public class Task {
         this.status = status;
     }
 
+    public TaskPriority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(TaskPriority priority) {
+        this.priority = priority;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -93,13 +93,5 @@ public class Task {
 
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
-    }
-
-    public TaskPriority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(TaskPriority priority) {
-        this.priority = priority;
     }
 }

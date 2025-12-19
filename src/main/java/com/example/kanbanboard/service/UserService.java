@@ -23,9 +23,14 @@ public class UserService {
     private JwtService jwtService;
 
     public User register(User user) {
-        // Fail if username already exists
+        // Fail if username already exists (keep this check)
         if (userRepo.findByUsername(user.getUsername()) != null) {
             throw new RuntimeException("Username already exists");
+        }
+
+        // OPTIONAL but recommended: also prevent duplicate emails
+        if (user.getEmail() != null && userRepo.findByEmail(user.getEmail()) != null) {
+            throw new RuntimeException("Email already exists");
         }
 
         // Admin roles: first user becomes admin, others are false
@@ -41,8 +46,9 @@ public class UserService {
     }
 
     // Return token + userId + isAdmin for frontend
-    public Map<String, String> login(String username, String rawPassword) {
-        User user = userRepo.findByUsername(username);
+    // CHANGE: first argument is now email, not username
+    public Map<String, String> login(String email, String rawPassword) {
+        User user = userRepo.findByEmail(email);
         if (user == null) {
             throw new RuntimeException("Invalid credentials: user not found");
         }
@@ -57,14 +63,16 @@ public class UserService {
         result.put("userId", user.getId());
         // Boolean to string
         result.put("isAdmin", user.getAdmin().toString());
+        result.put("username", user.getUsername());
         return result;
     }
 
+    // Still available if you use username elsewhere in the app
     public User findByUsername(String username) {
         return userRepo.findByUsername(username);
     }
 
-    // NEW: list all users (for admin dropdown)
+    // List all users (for admin dropdown)
     public List<User> findAllUsers() {
         return userRepo.findAll();
     }

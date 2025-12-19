@@ -8,33 +8,50 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/tasks")
-@CrossOrigin("*")
+@CrossOrigin(origins = "*")
 public class TaskController {
 
     @Autowired
     private TaskService taskService;
 
-    // Admin (creatorId) creates a task for a target user in a board.
-    // Task always starts in TODO column logically.
+    // =====================================================
+    // CREATE TASK (ADMIN ONLY)
+    // =====================================================
     @PostMapping
-    public Task createTask(
+    public ResponseEntity<Task> createTask(
             @RequestParam String creatorId, // logged-in admin
-            @RequestParam String userId,    // target user to assign to
+            @RequestParam String userId,     // target user
             @RequestParam String boardId,
             @RequestBody Task task
     ) {
-        // ignore any status sent from frontend, enforce TODO via service
+        /*
+         🔒 SECURITY & CONSISTENCY:
+         - Status is ALWAYS enforced in service (TODO)
+         - Priority is allowed if admin selected it
+         */
         task.setStatus(null);
-        return taskService.createTask(creatorId, userId, boardId, task);
+        task.setColumnId(null);
+
+        Task created = taskService.createTask(creatorId, userId, boardId, task);
+        return ResponseEntity.ok(created);
     }
 
-    // Update a task by id (status, title, description, deadline, priority)
+    // =====================================================
+    // UPDATE TASK (PARTIAL UPDATE - PATCH)
+    // =====================================================
     @PatchMapping("/{taskId}")
     public ResponseEntity<Task> updateTask(
             @PathVariable String taskId,
             @RequestParam String userId,
             @RequestBody Task data
     ) {
+        /*
+         ✅ IMPORTANT RULE:
+         - Only fields present in `data` will be updated
+         - Missing fields are preserved by TaskService
+         - Priority update DOES NOT affect status
+         - Status update DOES move columns
+         */
         Task updated = taskService.updateTask(userId, taskId, data);
         return ResponseEntity.ok(updated);
     }

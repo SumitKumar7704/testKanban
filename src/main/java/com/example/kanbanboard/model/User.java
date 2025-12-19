@@ -12,8 +12,10 @@ public class User {
 
     @Id
     private String id;
+   // private String name;
 
-    @Indexed(unique = true)
+   @Indexed(unique = true)
+
     private String username;
 
     private String email;

@@ -18,14 +18,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public User register(@RequestBody User user) {
+        // User contains: username, email, password, admin flag, etc.
         return userService.register(user);
     }
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody LoginRequest request) {
-        return userService.login(request.getUsername(), request.getPassword());
+        // Email-based login
+        return userService.login(request.getEmail(), request.getPassword());
     }
-
-
-
 }

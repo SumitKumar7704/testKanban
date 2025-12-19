@@ -8,7 +8,6 @@ public class Task {
     private String title;
     private String description;
 
-    // ❌ NO DEFAULTS HERE
     private TaskStatus status;
     private TaskPriority priority;
 
@@ -18,10 +17,67 @@ public class Task {
 
     private String columnId;
 
-    // ✅ EMPTY constructor ONLY
+    //admin reopening approved task
+    private Boolean approvedReopened;
+
+    public Boolean getApprovedReopened() {
+        return approvedReopened;
+    }
+
+    public void setApprovedReopened(Boolean approvedReopened) {
+        this.approvedReopened = approvedReopened;
+    }
+
+    // approval flow
+    private TaskApprovalStatus approvalStatus = TaskApprovalStatus.NONE;
+
+    // user remark when marking DONE
+    private String completionRemark;
+
+    // admin remarks
+    private String adminApprovalRemark;   // when approved (10 words max, enforced in service)
+    private String adminRejectionRemark;  // when rejected (20 words max, enforced in service)
+
+    // empty constructor ONLY
     public Task() {}
 
-    // ---------------- getters & setters ----------------
+    // ===== User completion remark =====
+    public String getCompletionRemark() {
+        return completionRemark;
+    }
+
+    public void setCompletionRemark(String completionRemark) {
+        this.completionRemark = completionRemark;
+    }
+
+    // ===== Admin approval remark =====
+    public String getAdminApprovalRemark() {
+        return adminApprovalRemark;
+    }
+
+    public void setAdminApprovalRemark(String adminApprovalRemark) {
+        this.adminApprovalRemark = adminApprovalRemark;
+    }
+
+    // ===== Admin rejection remark =====
+    public String getAdminRejectionRemark() {
+        return adminRejectionRemark;
+    }
+
+    public void setAdminRejectionRemark(String adminRejectionRemark) {
+        this.adminRejectionRemark = adminRejectionRemark;
+    }
+
+    // ===== Approval status =====
+    public TaskApprovalStatus getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(TaskApprovalStatus approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    // ===== existing getters & setters =====
 
     public String getId() {
         return id;

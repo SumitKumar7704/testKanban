@@ -8,51 +8,61 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/tasks")
-@CrossOrigin(origins = "*")
+@CrossOrigin("*")
 public class TaskController {
 
     @Autowired
     private TaskService taskService;
 
-    // =====================================================
-    // CREATE TASK (ADMIN ONLY)
-    // =====================================================
+    // Admin (creatorId) creates a task for a target user in a board.
+    // Task always starts in TODO column logically.
     @PostMapping
-    public ResponseEntity<Task> createTask(
+    public Task createTask(
             @RequestParam String creatorId, // logged-in admin
-            @RequestParam String userId,     // target user
+            @RequestParam String userId,    // target user to assign to
             @RequestParam String boardId,
             @RequestBody Task task
     ) {
-        /*
-         🔒 SECURITY & CONSISTENCY:
-         - Status is ALWAYS enforced in service (TODO)
-         - Priority is allowed if admin selected it
-         */
+        // ignore any status sent from frontend, enforce TODO via service
         task.setStatus(null);
-        task.setColumnId(null);
-
-        Task created = taskService.createTask(creatorId, userId, boardId, task);
-        return ResponseEntity.ok(created);
+        return taskService.createTask(creatorId, userId, boardId, task);
     }
 
-    // =====================================================
-    // UPDATE TASK (PARTIAL UPDATE - PATCH)
-    // =====================================================
+    // Normal update (status, title, description, deadline, priority, completionRemark)
+    // still enforces "approved and locked" rule.
     @PatchMapping("/{taskId}")
     public ResponseEntity<Task> updateTask(
             @PathVariable String taskId,
             @RequestParam String userId,
             @RequestBody Task data
     ) {
-        /*
-         ✅ IMPORTANT RULE:
-         - Only fields present in `data` will be updated
-         - Missing fields are preserved by TaskService
-         - Priority update DOES NOT affect status
-         - Status update DOES move columns
-         */
         Task updated = taskService.updateTask(userId, taskId, data);
+        return ResponseEntity.ok(updated);
+    }
+
+    // Admin review: approve/reject a DONE task
+    @PatchMapping("/{taskId}/review")
+    public ResponseEntity<Task> reviewTask(
+            @PathVariable String taskId,
+            @RequestParam String adminId,
+            @RequestParam String userId,
+            @RequestParam boolean approved,
+            @RequestParam(required = false) String remark
+    ) {
+        Task reviewed = taskService.reviewTask(adminId, userId, taskId, approved, remark);
+        return ResponseEntity.ok(reviewed);
+    }
+
+    // NEW: Admin override to move an already approved DONE task back to TODO
+    // and optionally mark it as "reopened" + set a remark visible to both.
+    @PatchMapping("/{taskId}/override-status")
+    public ResponseEntity<Task> overrideTaskStatus(
+            @PathVariable String taskId,
+            @RequestParam String adminId,          // logged-in admin id
+            @RequestParam String userId,           // owner of the task (board user)
+            @RequestBody Task data                 // expect at least status + completionRemark
+    ) {
+        Task updated = taskService.overrideTaskStatus(adminId, userId, taskId, data);
         return ResponseEntity.ok(updated);
     }
 }

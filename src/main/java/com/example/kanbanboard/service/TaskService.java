@@ -1,5 +1,6 @@
 package com.example.kanbanboard.service;
 
+import com.example.kanbanboard.exception.TaskLockedException;
 import com.example.kanbanboard.exception.WipLimitExceededException;
 import com.example.kanbanboard.model.*;
 import com.example.kanbanboard.repository.UserRepository;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.UUID;
 
 @Service
@@ -44,9 +46,11 @@ public class TaskService {
 
         newTask.setId(UUID.randomUUID().toString());
 
-        // 🔒 Enforced defaults for creation ONLY
+        // Enforced defaults for creation ONLY
         newTask.setStatus(TaskStatus.TODO);
         newTask.setColumnId(todoColumn.getId());
+        newTask.setApprovalStatus(TaskApprovalStatus.NONE);
+        newTask.setApprovedReopened(false);
 
         if (newTask.getAssignedAt() == null) {
             newTask.setAssignedAt(LocalDateTime.now());
@@ -66,7 +70,7 @@ public class TaskService {
         return newTask;
     }
 
-    // ===================== UPDATE TASK =====================
+    // ===================== UPDATE TASK (normal path) =====================
 
     public Task updateTask(String userId, String taskId, Task newData) {
 
@@ -83,6 +87,14 @@ public class TaskService {
                     if (newData.getStatus() != null &&
                             newData.getStatus() != task.getStatus()) {
 
+                        // Block any status change if task is already approved
+                        if (task.getApprovalStatus() == TaskApprovalStatus.APPROVED) {
+                            throw new TaskLockedException(
+                                    "This task has been approved and locked by the admin." +
+                                            " Completed tasks can’t be moved back to In Progress or To Do."
+                            );
+                        }
+
                         TaskStatus newStatus = newData.getStatus();
 
                         // WIP limit check
@@ -97,7 +109,7 @@ public class TaskService {
                             }
                         }
 
-                        // 🔥 Move column ONLY when status changes
+                        // Move column ONLY when status changes
                         Column targetColumn = findColumnForStatus(board, newStatus);
                         if (targetColumn != null &&
                                 !targetColumn.getId().equals(column.getId())) {
@@ -106,6 +118,18 @@ public class TaskService {
                         }
 
                         task.setStatus(newStatus);
+
+                        // approval flow based on status
+                        if (newStatus == TaskStatus.DONE) {
+                            task.setApprovalStatus(TaskApprovalStatus.PENDING_REVIEW);
+                            task.setApprovedReopened(false); // fresh completion, not reopened
+                        } else {
+                            // whenever task is not DONE, clear approval + admin remarks
+                            task.setApprovalStatus(TaskApprovalStatus.NONE);
+                            task.setAdminApprovalRemark(null);
+                            task.setAdminRejectionRemark(null);
+                            task.setApprovedReopened(false);
+                        }
                     }
 
                     /* ================= SAFE FIELD UPDATES ================= */
@@ -122,9 +146,154 @@ public class TaskService {
                         task.setDeadline(newData.getDeadline());
                     }
 
-                    // 🔒 Priority update does NOT touch status or column
+                    // user completion remark when marking DONE
+                    if (newData.getCompletionRemark() != null) {
+                        task.setCompletionRemark(newData.getCompletionRemark());
+                    }
+
+                    // priority update does NOT touch status or column
                     if (newData.getPriority() != null) {
                         task.setPriority(newData.getPriority());
+                    }
+
+                    userRepo.save(user);
+                    return task;
+                }
+            }
+        }
+
+        throw new RuntimeException("Task not found");
+    }
+
+    // ===================== ADMIN OVERRIDE STATUS (approved -> TODO) =====================
+
+    public Task overrideTaskStatus(String adminId,
+                                   String userId,
+                                   String taskId,
+                                   Task overrideData) {
+
+        // Ensure caller is admin
+        User admin = userRepo.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        if (!admin.getAdmin()) {
+            throw new RuntimeException("Only admin can override task status");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        for (Board board : user.getBoards()) {
+            for (Column column : board.getColumns()) {
+                for (Task task : column.getTasks()) {
+
+                    if (!task.getId().equals(taskId)) continue;
+
+                    // Only allow override if it was approved DONE
+                    if (task.getApprovalStatus() != TaskApprovalStatus.APPROVED ||
+                            task.getStatus() != TaskStatus.DONE) {
+                        throw new RuntimeException("Override allowed only for approved DONE tasks");
+                    }
+
+                    TaskStatus targetStatus = overrideData.getStatus();
+                    if (targetStatus == null || targetStatus != TaskStatus.TODO) {
+                        throw new RuntimeException("Override can only move task back to TODO");
+                    }
+
+                    // Move task to TODO column
+                    Column targetColumn = findColumnForStatus(board, TaskStatus.TODO);
+                    if (targetColumn != null &&
+                            !targetColumn.getId().equals(column.getId())) {
+                        moveTaskBetweenColumns(task, column, targetColumn);
+                    }
+
+                    // Set status & flags
+                    task.setStatus(TaskStatus.TODO);
+                    task.setApprovalStatus(TaskApprovalStatus.NONE);
+                    task.setAdminApprovalRemark(null);
+                    task.setAdminRejectionRemark(null);
+                    task.setApprovedReopened(true); // flag for yellow highlight
+
+                    // Optional: store admin-provided explanation as completionRemark (max 20 words)
+                    if (overrideData.getCompletionRemark() != null &&
+                            !overrideData.getCompletionRemark().isBlank()) {
+
+                        String remark = overrideData.getCompletionRemark().trim();
+                        String[] words = remark.split("\\s+");
+                        if (words.length > 20) {
+                            remark = String.join(" ", Arrays.copyOf(words, 20));
+                        }
+                        task.setCompletionRemark(remark);
+                    }
+
+                    userRepo.save(user);
+                    return task;
+                }
+            }
+        }
+
+        throw new RuntimeException("Task not found");
+    }
+
+    // ===================== ADMIN REVIEW TASK =====================
+
+    public Task reviewTask(String adminId,
+                           String userId,
+                           String taskId,
+                           boolean approved,
+                           String remark) {
+
+        User admin = userRepo.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        if (!admin.getAdmin()) {
+            throw new RuntimeException("Only admin can review tasks");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        for (Board board : user.getBoards()) {
+            for (Column column : board.getColumns()) {
+                for (Task task : column.getTasks()) {
+                    if (!task.getId().equals(taskId)) continue;
+
+                    if (approved) {
+                        // lock as approved DONE
+                        task.setApprovalStatus(TaskApprovalStatus.APPROVED);
+                        task.setStatus(TaskStatus.DONE);
+                        task.setApprovedReopened(false);
+
+                        // 10-word max appreciation remark
+                        if (remark != null && !remark.isBlank()) {
+                            String[] words = remark.trim().split("\\s+");
+                            if (words.length > 10) {
+                                remark = String.join(" ",
+                                        Arrays.copyOf(words, 10));
+                            }
+                            task.setAdminApprovalRemark(remark);
+                            task.setAdminRejectionRemark(null);
+                        }
+                    } else {
+                        // mark as rejected and move back to TODO
+                        task.setApprovalStatus(TaskApprovalStatus.REJECTED);
+                        task.setStatus(TaskStatus.TODO);
+                        task.setAdminApprovalRemark(null);
+                        task.setApprovedReopened(false);
+
+                        Column target = findColumnForStatus(board, TaskStatus.TODO);
+                        if (target != null &&
+                                !target.getId().equals(column.getId())) {
+                            moveTaskBetweenColumns(task, column, target);
+                        }
+
+                        // 20-word max rejection remark
+                        if (remark != null && !remark.isBlank()) {
+                            String[] words = remark.trim().split("\\s+");
+                            if (words.length > 20) {
+                                remark = String.join(" ",
+                                        Arrays.copyOf(words, 20));
+                            }
+                            task.setAdminRejectionRemark(remark);
+                        }
                     }
 
                     userRepo.save(user);

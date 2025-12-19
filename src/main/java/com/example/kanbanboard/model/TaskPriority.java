@@ -2,7 +2,7 @@
 package com.example.kanbanboard.model;
 
 public enum TaskPriority {
-    LOW,
-    MEDIUM,
-    HIGH
+    LOW, //less urgent
+    MEDIUM,//of medium urgency
+    HIGH //of high urgency or attention
 }

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/tasks")
 @CrossOrigin("*")
@@ -38,4 +40,18 @@ public class TaskController {
         Task updated = taskService.updateTask(userId, taskId, data);
         return ResponseEntity.ok(updated);
     }
+
+    @PatchMapping("/{taskId}/priority")
+    public ResponseEntity<?> updatePriority(
+            @PathVariable String taskId,
+            @RequestParam String adminId,
+            @RequestParam String targetUserId,
+            @RequestBody Map<String, String> body) {
+
+        String priority = body.get("priority");
+        taskService.updatePriority(taskId, priority, adminId, targetUserId);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

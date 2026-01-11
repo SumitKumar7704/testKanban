@@ -11,6 +11,7 @@ import com.example.kanbanboard.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -136,10 +137,10 @@ public class TaskService {
                             task.setDeadline(newData.getDeadline());
                         }
 
-                        // 5) Priority: only if explicitly provided
-                        if (newData.getPriority() != null) {
-                            task.setPriority(newData.getPriority());
-                        }
+//                        // 5) Priority: only if explicitly provided
+//                        if (newData.getPriority() != null) {
+//                            task.setPriority(newData.getPriority());
+//                        }
 
                         userRepo.save(user);
                         return task;
@@ -193,4 +194,51 @@ public class TaskService {
         toColumn.getTasks().add(task);
         task.setColumnId(toColumn.getId());
     }
+
+    public void updatePriority(String taskId,
+                               String priority,
+                               String adminId,
+                               String targetUserId) {
+
+        // 1) Validate admin
+        User admin = userRepo.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!Boolean.TRUE.equals(admin.getAdmin())) {
+            throw new RuntimeException("Only admin can change priority");
+        }
+
+        // 2) Load TARGET user (task owner)
+        User user = userRepo.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+        // 3) Find task inside target user's boards
+        for (Board board : user.getBoards()) {
+            for (Column column : board.getColumns()) {
+                for (Task task : column.getTasks()) {
+
+                    if (task.getId().equals(taskId)) {
+
+                        // 🚫 BLOCK priority change for DONE tasks
+                        if (task.getStatus() == TaskStatus.DONE) {
+                            throw new RuntimeException(
+                                    "Cannot change priority of a completed task"
+                            );
+                        }
+
+                        // ✅ Update priority
+                        task.setPriority(TaskPriority.valueOf(priority));
+                        userRepo.save(user);
+                        return;
+                    }
+                }
+            }
+        }
+
+        throw new RuntimeException("Task not found");
+    }
+
+
+
+
 }
